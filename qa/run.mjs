@@ -24,18 +24,22 @@ const PINS = "raimei:2:2.4,kuruma:1:4.2,ressha:2:3.2.0,bus:1:0.2.4,kanshi:1:2.4.
 //       「雷ナウキャストの見方」thunder2-2.html ・「雷ナウキャストの利用と留意点」thunder4-2.html ・「段階的に発表する気象情報の利用」thunder4-1.html
 // 場面の問題：答え（安全な行動）と2段目（なぜ安全？）
 const SCENE = {
-  kosha: ["鉄筋コンクリートの校舎に入る", "naka"], kuruma: ["屋根のある自動車の中に入る", "naka"], ki: ["木の下に入らず、幹・枝・葉から2m以上離れる", "hikui"],
+  kosha: ["鉄筋コンクリートの校舎に入る", "naka"], kuruma: ["自動車（オープンカーでない）の中に入る", "naka"], ki: ["木の下に入らず、幹・枝・葉から2m以上離れる", "hikui"],
   ressha: ["列車の中に入る", "naka"], bus: ["海から上がり、バスの中に入る", "naka"], denchu: ["電柱のてっぺんを45度以上で見上げ、4m以上離れた所へ", "hogo"],
   kasa: ["持ち物を体より高く出さず、姿勢を低くする", "hikui"], matsu: ["雷の活動が止み、20分以上たってから", "matsu"],
   mokuzo: ["電気器具と天井・壁から1m以上離れる", "naka"], tetto: ["鉄塔のてっぺんを45度以上で見上げ、4m以上離れた所へ", "hogo"],
-  suwaru: ["姿勢を低くし、座ったり寝ころんだりしない", "hikui"], jidosha: ["車の中にいる（屋根のある車）", "naka"], matsu2: ["雷の活動が止み、20分以上たってから", "matsu"],
+  suwaru: ["姿勢を低くし、座ったり寝ころんだりしない", "hikui"], jidosha: ["自動車（オープンカーでない）の中にいる", "naka"], matsu2: ["雷の活動が止み、20分以上たってから", "matsu"],
 };
 // 雷の情報・身の守り方の問題の答え
 const FACT = { raimei: "落雷が差し迫っている", anzen: "鉄筋コンクリートの建物の中", hiraketa: "砂浜やグラウンドなど開けた場所", kakudo: "45度以上", kyori: "4m以上", ki2m: "2m以上",
   chuiho: "被害が予想される数時間前", tomonau: "雷を伴う", katsudo1: "雨雲が雷雲に発達する可能性がある", katsudo2: "直ちに建物の中など安全な場所へ避難", koshin: "10分ごと", koshi: "1km",
   yosoku: "1時間後（10〜60分先）まで", unkei: "雨雲の特徴から雷雲と解析したとき", kanshi: "全ての雷を捉えられるわけではない", fuantei: "大気の状態が不安定", kyuhen: "急に雷雲が発達することもあり、天気の急変に注意" };
 // まちがいの選び肢に、ページで安全とする行動・場所が入らない（答えが2つにならない）
-const SAFE = /鉄筋コンクリート|バスの中に入る|列車の中に入る|自動車の中に入る|45度以上で見上げ|2m以上離れる|20分以上たって/;
+const SAFE = /鉄筋コンクリート|バスの中に入る|列車の中に入る|自動車（オープンカーでない）の中|45度以上で見上げ|2m以上離れる|20分以上たって/;
+// 情報の問題で、答えと同じ側の選び肢がまじらない（安全な所を聞く問題に安全な所・落ちやすい所を聞く問題に開けた所。#1 の CodeRabbit）
+const ONE = { anzen: /鉄筋|バス|列車|自動車の中|木造|建物の中|地下/, hiraketa: /グラウンド|砂浜|海|堤防|山頂|尾根|ゴルフ|プール/ };
+// 車の問題はオープンカーを除く（幌を閉じたオープンカーも「屋根のある車」になるため。#1 の CodeRabbit）
+const CAR = ["kuruma", "jidosha"];
 {
   const bad = {}, seen = {}, N = 3000;
   for (const k of G.KINDS) {
@@ -49,10 +53,12 @@ const SAFE = /鉄筋コンクリート|バスの中に入る|列車の中に入�
         else { if (P.ans !== SCENE[k.id][0]) why.push("答えが気象庁のページとちがう"); if (P.grp !== SCENE[k.id][1]) why.push("2段目が表とちがう"); }
         if (P.opts.some((o) => o !== P.ans && SAFE.test(o))) why.push("まちがいの選び肢に安全な行動がまじる");
         if (!/[？]$/.test(P.q)) why.push("問いの言い方がちがう");
+        if (CAR.includes(k.id) && (!/オープンカーでない/.test(P.q) || /屋根のある/.test(P.q + P.ans))) why.push("車の問題でオープンカーを除いていない");
       } else {
         if (FACT[k.id] === undefined) why.push("表に無い種類");
         else if (P.ans !== FACT[k.id]) why.push("答えが気象庁のページとちがう");
         if (P.grp) why.push("情報の問題に2段目がある");
+        if (ONE[k.id] && P.opts.some((o) => o !== P.ans && ONE[k.id].test(o))) why.push("答えと同じ側の選び肢がまじる");
       }
       if (!P.src.length || P.src.some((x) => !Array.isArray(x) || !/^https:\/\/www\.(data\.)?jma\.go\.jp\//.test(x[1]))) why.push("出典が無い");
       if (JSON.stringify(G.make(`${k.id}|qa${s}`)) !== JSON.stringify(P)) why.push("同じ種で同じ問題にならない");

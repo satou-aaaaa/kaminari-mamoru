@@ -501,7 +501,7 @@ const TIPS = [
   ["開けた場所", "グラウンド・砂浜・海上などの開けた場所や山頂は、人に落雷しやすい所です。"],
   ["保護範囲", "高い物のてっぺんを45度以上で見上げ、その物から4m以上離れた所です。"],
   ["木から2m", "高い木の近くは危険です。幹・枝・葉の全部から2m以上離れます。"],
-  ["20分待つ", "雷の活動が止み、20分以上たってから安全な空間を出ます。"],
+  ["20分待つ", "外で待っていたときは、雷の活動が止み、20分以上たってから安全な空間へ移動します。"],
   ["活動度2〜4", "雷ナウキャストの活動度2〜4は、いつ落雷があってもおかしくない状況です。"],
 ];
 const tipOf = (k) => TIPS[((dayNo(k) - 1) % TIPS.length + TIPS.length) % TIPS.length];
@@ -536,7 +536,7 @@ const starStr = (s) => `<span class="stars" role="img" aria-label="星${s}つ">$
 const fresh = () => ({ v: 1, days: {}, hdays: {}, adays: {}, dex: {}, runs: {}, tut: false, kofi: {}, ach: {}, ebest: 0 });
 let MODE = "d";
 let mem = null; // 保存できない環境では、開いているあいだだけここに置く
-const doneOf = (r) => !!r && r.mode !== "e" && r.res.length >= r.list.length, recOf = (r) => ({ m: r.res.map((x) => x.m), k: r.list.map((t) => t.split("|")[0]) });
+const doneOf = (r) => !!r && r.mode !== "e" && Array.isArray(r.list) && Array.isArray(r.res) && r.res.length >= r.list.length, recOf = (r) => ({ m: r.res.map((x) => x.m), k: r.list.map((t) => t.split("|")[0]) });
 const runKey = (mode, date) => (mode === "a" ? "a:" + date : mode);
 const bookOf = (s, m) => (m === "d" ? s.days : m === "h" ? s.hdays : m === "a" ? s.adays : null);
 // 終わった回を日ごとの記録に入れる（結果を見る前に閉じても、別のタブが次の日を保存しても、終えた日を失わない）
@@ -785,7 +785,7 @@ function askWhy() {
 }
 function paintWhy() {
   const cut = cut2Of();
-  document.querySelectorAll(".why button").forEach((b) => { const x = b.dataset.g, ng = cur.w2.includes(x) || cut.includes(x); b.classList.toggle("ng", ng); b.disabled = ng || cur.done; b.setAttribute("aria-label", G.GROUPS[x].name + (ng ? "（ちがう）" : "")); });
+  document.querySelectorAll(".why button").forEach((b) => { const x = b.dataset.g, ng = cur.w2.includes(x) || cut.includes(x); b.classList.toggle("ng", ng); b.disabled = ng || cur.done; b.setAttribute("aria-label", G.GROUPS[x].name + "、" + G.GROUPS[x].sub + (ng ? "（ちがう）" : "")); });
   const h = $("hint"); if (h) h.disabled = cur.done || cur.hints >= 2 || !!cur.h2 || !left2Of().length;
   $("hintbox").innerHTML = cur.h2 && !cur.done ? `<div class="hint" role="status">💡 ちがう目安を1つ消しました。</div>` : "";
 }
