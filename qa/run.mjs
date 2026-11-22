@@ -15,7 +15,7 @@ import { checkDepth } from "./depth-check.mjs";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const results = [];
 const check = (name, ok, detail = "") => results.push({ name, ok: !!ok, detail: String(detail).slice(0, 400) });
-const firstClose = async (q) => { if (await q.locator("#howto[open]").count()) await q.click("#howto-ok"); if (await q.locator("#core-coach").count()) { await q.evaluate(() => Core.coach.leave()); await q.waitForTimeout(100); } }; // はじめての練習の吹き出しをやめてホームへ（sync-template の migrateFirstQa が足した）
+const firstClose = async (q) => { if (await q.locator("#howto[open]").count()) await q.click("#howto-ok"); if (await q.evaluate(() => !!(window.Core && Core.coach && Core.coach.active()))) { await q.evaluate(() => { Core.coach.leave(); scrollTo(0, 0); }); await q.waitForTimeout(100); } }; // はじめての練習の吹き出しをやめてホームへ（sync-template の migrateFirstQa が足した）
 const G = createRequire(import.meta.url)(path.join(root, "data.js"));
 
 const PINS = "raimei:2:2.4,kuruma:1:4.2,ressha:2:3.2.0,bus:1:0.2.4,kanshi:1:2.4.0,koshi:0:0.2.1,fuantei:0:1.4.0,matsu2:0:4.0.3;kosha:0:0.2,hiraketa:0:1.2,ki2m:1:0.4.2,kyori:2:4.2.3,koshin:1:4.2.0,tetto:1:3.2.1,katsudo1:2:0.3.4,unkei:2:4.2.0;anzen:2:0.3,kosha:0:0.4,bus:1:1.3.0,denchu:2:3.1.0,yosoku:1:3.4.0,jidosha:2:2.3.1,mokuzo:2:4.1.3,katsudo1:0:3.0.2"; // 過去の日の問題の印（変わったら過去の日の問題が変わった印。種類・言い方は足すだけでも変わる）
